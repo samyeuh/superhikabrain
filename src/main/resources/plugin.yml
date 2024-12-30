@@ -1,0 +1,8 @@
+name: SuperHikabrain
+main: com.samy.superhikabrain.SuperHikabrain
+version: 1.0
+api-version: 1.20
+description: Mon premier plugin Minecraft Spigot.
+author: Samy
+depend:
+  - SuperServeurPlugin
