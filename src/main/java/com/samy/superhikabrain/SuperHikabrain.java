@@ -12,7 +12,6 @@ public class SuperHikabrain extends JavaPlugin {
     @Override
     public void onEnable() {
         api = SuperAPI.getInstance();
-
         GameManager manager = new GameManager(this);
         getServer().getPluginManager().registerEvents(new WaitingListener(manager), this);
         enableScoreboard();
@@ -20,7 +19,6 @@ public class SuperHikabrain extends JavaPlugin {
 
     public void enableScoreboard(){
         getServer().getPluginManager().registerEvents(new ScoreboardListener(api.getScoreboardManager()), this);
-
     }
 
 }
