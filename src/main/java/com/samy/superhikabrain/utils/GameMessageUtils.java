@@ -1,4 +1,4 @@
-package com.samy.superhikabrain;
+package com.samy.superhikabrain.utils;
 
 import org.bukkit.ChatColor;
 

@@ -1,7 +1,7 @@
-package com.samy.superhikabrain.starting;
+package com.samy.superhikabrain.tasks;
 
-import com.samy.superhikabrain.GameManager;
-import com.samy.superhikabrain.GameMessageUtils;
+import com.samy.superhikabrain.manager.GameManager;
+import com.samy.superhikabrain.utils.GameMessageUtils;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class StartingTask extends BukkitRunnable {
@@ -11,16 +11,19 @@ public class StartingTask extends BukkitRunnable {
 
     public StartingTask(GameManager manager) {
         this.manager = manager;
-        this.seconds = 10;
+        this.seconds = 15;
     }
 
     @Override
     public void run() {
-        if (seconds == 0) {
-            manager.playGame();
+
+        if (!manager.isFull()) {
             cancel();
             return;
         }
+
+        if (seconds == 15)
+            manager.sendMessageAll(GameMessageUtils.getGameStartMessage("15"));
 
         if (seconds == 10)
             manager.sendMessageAll(GameMessageUtils.getGameStartMessage("10"));
@@ -31,6 +34,13 @@ public class StartingTask extends BukkitRunnable {
                 manager.sendMessageAll(GameMessageUtils.getGameStartMessage("5"));
 
         }
+
+        if (seconds == 0) {
+            manager.playGame();
+            cancel();
+            return;
+        }
+
         seconds--;
     }
 }
