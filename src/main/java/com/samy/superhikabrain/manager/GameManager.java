@@ -28,13 +28,14 @@ public class GameManager {
     public GameManager(SuperHikabrain plugin) {
         this.state = GameState.WAITING;
         this.plugin = plugin;
+        this.teamManager = new TeamManager(this);
         this.hotbarManager = new HotbarManager(this);
         this.maxPlayers = plugin.getConfig().getInt("max_players");
         this.gameServer = plugin.getServer().getWorld("game");
         this.waitingServer = plugin.getServer().getWorld("waiting");
         waitingServer.setSpawnLocation(54, 64, 0);
 
-        this.teamManager = new TeamManager(this);
+
     }
 
     public boolean isFull() {
@@ -47,6 +48,10 @@ public class GameManager {
 
     public TeamManager getTeamManager() {
         return teamManager;
+    }
+
+    public HotbarManager getHotbarManager() {
+        return hotbarManager;
     }
 
     public void joinPlayer(Player player) {
@@ -89,8 +94,10 @@ public class GameManager {
 
     public void playGame() {
         state = GameState.PLAYING;
+        teamManager.addPlayersToTeam();
         players.forEach(player -> player.getInventory().clear());
         teamManager.teleportPlayers();
+        players.forEach(player -> player.sendMessage("Vous êtes dans l'équipe " + teamManager.getPlayerTeam(player).getName()));
     }
 
     public void playerDeath(Player p){

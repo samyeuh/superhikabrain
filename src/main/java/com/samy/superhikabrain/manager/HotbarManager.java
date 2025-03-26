@@ -1,7 +1,7 @@
 package com.samy.superhikabrain.manager;
 
 import com.samy.superhikabrain.HikaTeam;
-import com.samy.superhikabrain.SuperHikabrain;
+import com.samy.superhikabrain.TeamManager;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
 import org.bukkit.entity.Player;
@@ -17,22 +17,26 @@ import java.util.Map;
 
 public class HotbarManager {
 
-    public Map<Player, Map<ItemStack, Integer>> waitingHotbar;
     private final GameManager manager;
+    private final TeamManager teamManager;
 
     public HotbarManager(GameManager manager) {
-        waitingHotbar = new HashMap<>();
         this.manager = manager;
+        this.teamManager = manager.getTeamManager();
     }
 
     public Map<ItemStack, Integer> getWaitingHotbar(Player p) {
         p.getInventory().clear();
+        p.getInventory().setHeldItemSlot(0);
         Map<ItemStack, Integer> hotbar = new HashMap<>();
-        ItemStack teamSelect = new ItemStack(Material.WOOL, 1);
-        ItemStack leaveGame = new ItemStack(Material.DARK_OAK_DOOR, 1);
-        hotbar.put(teamSelect, 0);
+
+        if (!teamManager.isSolo()){
+            ItemStack teamSelect = new ItemStack(Material.WOOL, 1);
+            hotbar.put(teamSelect, 0);
+        }
+
+        ItemStack leaveGame = new ItemStack(Material.WOOD_DOOR, 1);
         hotbar.put(leaveGame, 8);
-        waitingHotbar.put(p, hotbar);
         return hotbar;
     }
 
@@ -47,9 +51,8 @@ public class HotbarManager {
         }
     }
 
-
-    public void onWoolClick(Player p, Material block) {
-        if (block == Material.WOOL) {
+    public void onWoolClick(Player p, ItemStack itemClick) {
+        if (itemClick.getType() == Material.WOOL) {
             Inventory inv = p.getServer().createInventory(null, 9, "Choix de l'équipe");
             int i = 0;
             for (HikaTeam team : manager.getTeamManager().getTeams()) {
@@ -59,12 +62,33 @@ public class HotbarManager {
                 inv.setItem(i, item);
                 i++;
             }
+            inv.setItem(8, new ItemStack(Material.DARK_OAK_DOOR, 1));
             p.openInventory(inv);
-        } else if (block == Material.DARK_OAK_DOOR) {
+        } else if (itemClick.getType() == Material.WOOD_DOOR) {
             p.kickPlayer("Vous avez quitté la partie");
-        } else {
-
         }
+    }
+
+    public void onColorWoolClick(Player p, ItemStack item) {
+        if (item.getType() == Material.WOOL) {
+            ChatColor[] colors = {ChatColor.RED, ChatColor.BLUE, ChatColor.GREEN, ChatColor.YELLOW};
+            byte data = (byte) item.getDurability();
+            for (ChatColor c : colors){
+                if (data == getWoolColor(c)){
+                    HikaTeam team = manager.getTeamManager().getTeamByColor(c);
+                    if (team != null)  {
+                        if (team.isFull()) {
+                            p.closeInventory();
+                            return;
+                        }
+                        teamManager.addPlayerToTeam(p, team);
+                        p.closeInventory();
+                        p.getInventory().setItem(0, item);
+                    }
+                }
+            }
+        }
+        p.closeInventory();
     }
 
     private static ItemMeta getItemMeta(HikaTeam team, ItemStack item) {
@@ -74,7 +98,7 @@ public class HotbarManager {
         List<String> lore = new ArrayList<>();
         if (!team.getPlayers().isEmpty()) {
             for (Player player : team.getPlayers()) {
-                lore.add(" - " + player.getName());
+                lore.add(ChatColor.GRAY + " - " + player.getName());
             }
             meta.setLore(lore);
         }
