@@ -18,6 +18,14 @@ public class SuperHikabrain extends JavaPlugin {
         api = SuperAPI.getInstance();
 
         getServer().createWorld(new WorldCreator("waiting"));
+        getServer().createWorld(new WorldCreator("game"));
+
+        if (getServer().getWorld("waiting") == null) {
+            getLogger().severe("Le monde 'waiting' est introuvable !");
+        }
+        if (getServer().getWorld("game") == null) {
+            getLogger().severe("Le monde 'game' est introuvable !");
+        }
 
         this.manager = new GameManager(this);
         getServer().getPluginManager().registerEvents(new GameListener(manager), this);

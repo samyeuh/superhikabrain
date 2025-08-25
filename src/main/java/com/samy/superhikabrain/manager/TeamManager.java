@@ -1,7 +1,6 @@
-package com.samy.superhikabrain;
+package com.samy.superhikabrain.manager;
 
-import com.samy.superhikabrain.manager.GameManager;
-import org.bukkit.Bukkit;
+import com.samy.superhikabrain.utils.HikaTeam;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -32,10 +31,49 @@ public class TeamManager {
 
     public void createTeams(int maxPlayers, int teamCount){
         List<HikaTeam> possibleTeams = new ArrayList<>();
-        possibleTeams.add(new HikaTeam("Red", ChatColor.RED, new ArrayList<>(),  new Location(manager.getPlugin().getServer().getWorld("game"), 0, 64, 0), maxPlayers / teamCount));
-        possibleTeams.add(new HikaTeam("Blue", ChatColor.BLUE, new ArrayList<>(), new Location(manager.getPlugin().getServer().getWorld("game"), 0, 64, 0), maxPlayers / teamCount));
-        possibleTeams.add(new HikaTeam("Green", ChatColor.GREEN, new ArrayList<>(), new Location(manager.getPlugin().getServer().getWorld("game"), 0, 64, 0), maxPlayers / teamCount));
-        possibleTeams.add(new HikaTeam("Yellow", ChatColor.YELLOW, new ArrayList<>(), new Location(manager.getPlugin().getServer().getWorld("game"), 0, 64, 0), maxPlayers / teamCount));
+        possibleTeams.add(
+            new HikaTeam(
+          "Red",
+                ChatColor.RED,
+                new ArrayList<>(),
+                new Location(manager.getPlugin().getServer().getWorld("game"), -50.5, 12, 369.5, 0.0f, 0.0f),
+        maxPlayers / teamCount,
+                new Location(manager.getPlugin().getServer().getWorld("game"), -51, 7, 368)
+            )
+        );
+
+        possibleTeams.add(
+            new HikaTeam(
+          "Blue",
+                ChatColor.BLUE,
+                new ArrayList<>(),
+                new Location(manager.getPlugin().getServer().getWorld("game"), -50.5, 12, 443.5,180f,0.0f),
+        maxPlayers / teamCount,
+                new Location(manager.getPlugin().getServer().getWorld("game"), -51, 7, 444)
+            )
+        );
+
+        possibleTeams.add(
+            new HikaTeam(
+          "Green",
+                ChatColor.GREEN,
+                new ArrayList<>(),
+                new Location(manager.getPlugin().getServer().getWorld("game"), -19.5, 12, 406.5, 90f, 0.0f),
+        maxPlayers / teamCount,
+                new Location(manager.getPlugin().getServer().getWorld("game"), -19, 7, 406)
+            )
+        );
+
+        possibleTeams.add(
+            new HikaTeam(
+          "Yellow",
+                ChatColor.YELLOW,
+                new ArrayList<>(),
+                new Location(manager.getPlugin().getServer().getWorld("game"), -81.5, 12, 406.5, 270f, 0.0f),
+        maxPlayers / teamCount,
+                new Location(manager.getPlugin().getServer().getWorld("game"), -83, 7, 406)
+            )
+        );
 
         for (int i = 0; i < teamCount; i++){
             teams.add(possibleTeams.get(i));
@@ -63,7 +101,7 @@ public class TeamManager {
     }
 
     public void addPlayersToTeam() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
+        for (Player player : manager.getPlayers()) {
             if (getPlayerTeam(player) == null) {
                 addPlayerToRandomTeam(player);
             }
@@ -101,5 +139,12 @@ public class TeamManager {
             }
         }
         return null;
+    }
+
+    public void teleportPlayerToSpawn(Player p) {
+        HikaTeam team = getPlayerTeam(p);
+        if (team != null) {
+            team.teleportPlayer(p);
+        }
     }
 }
