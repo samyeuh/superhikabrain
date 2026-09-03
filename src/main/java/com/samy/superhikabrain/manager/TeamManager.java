@@ -41,6 +41,7 @@ public class TeamManager {
 
         World world = manager.getPlugin().getServer().getWorld("game");
         int teamSize = maxPlayers / teamCount;
+        int teamLives = manager.getPlugin().getConfig().getInt("team_lives");
 
         for (int i = 0; i < teamCount; i++) {
             Map<?, ?> teamConfig = configuredTeams.get(i);
@@ -48,7 +49,7 @@ public class TeamManager {
             ChatColor color = ChatColor.valueOf((String) teamConfig.get("color"));
             Location spawn = parseLocation(world, (String) teamConfig.get("spawn"));
             Location bedSpawn = parseLocation(world, (String) teamConfig.get("bed"));
-            teams.add(new HikaTeam(name, color, new ArrayList<>(), spawn, teamSize, bedSpawn));
+            teams.add(new HikaTeam(name, color, new ArrayList<>(), spawn, teamSize, bedSpawn, teamLives));
         }
     }
 
@@ -108,9 +109,9 @@ public class TeamManager {
         }
     }
 
-    public void resetBeds() {
+    public void resetLives() {
         for (HikaTeam team : teams) {
-            team.restoreBed();
+            team.resetLives();
         }
     }
 

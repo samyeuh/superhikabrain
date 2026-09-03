@@ -7,6 +7,7 @@ import com.samy.superhikabrain.SuperHikabrain;
 import com.samy.superhikabrain.tasks.StartingTask;
 import com.samy.superhikabrain.utils.HikaTeam;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -33,7 +34,7 @@ public class GameManager {
     private final HotbarManager hotbarManager;
     private final TeamManager teamManager;
     private final Set<Location> placedBlocks = new HashSet<>();
-    private final Set<Player> eliminated = new HashSet<>();
+    private final Set<Location> minedBlocks = new HashSet<>();
     private final Map<UUID, BukkitTask> pendingRemovals = new HashMap<>();
     private static final long RECONNECT_GRACE_TICKS = 20L * 60 * 5; // 5 min
 
@@ -162,14 +163,13 @@ public class GameManager {
         sendMessageAll(GameMessageUtils.playerReconnectedMessage(player.getName()));
 
         HikaTeam team = teamManager.getPlayerTeam(player);
-        if (state == GameState.PLAYING && team != null && !team.isBedDestroyed()) {
+        if (state == GameState.PLAYING && team != null && !team.isEliminated()) {
             teamManager.teleportPlayerToSpawn(player);
             Map<Integer, ItemStack> items = hotbarManager.getPlayingHotbar(player);
             items.forEach((slot, item) -> player.getInventory().setItem(slot, item));
             player.setGameMode(GameMode.SURVIVAL);
         } else {
-            player.setGameMode(GameMode.SPECTATOR);
-            player.teleport(new Location(gameServer, -50, 16, 406.5, 180f, 0.0f));
+            moveToSpectator(player);
         }
     }
 
@@ -207,13 +207,24 @@ public class GameManager {
         placedBlocks.remove(location);
     }
 
+    public void trackMinedBlock(Location location) {
+        minedBlocks.add(location);
+    }
+
     private void resetArena() {
         for (Location location : placedBlocks) {
             location.getBlock().setType(Material.AIR);
         }
         placedBlocks.clear();
-        eliminated.clear();
-        teamManager.resetBeds();
+
+        for (Location location : minedBlocks) {
+            Block block = location.getBlock();
+            block.setType(Material.SANDSTONE);
+            block.setData((byte) 2);
+        }
+        minedBlocks.clear();
+
+        teamManager.resetLives();
     }
 
     public void preplayGame() {
@@ -244,8 +255,8 @@ public class GameManager {
         if (state != GameState.PLAYING) return;
 
         HikaTeam team = teamManager.getPlayerTeam(p);
-        if (team != null && team.isBedDestroyed()) {
-            eliminatePlayer(p);
+        if (team != null && team.isEliminated()) {
+            moveToSpectator(p);
             return;
         }
 
@@ -254,19 +265,26 @@ public class GameManager {
         items.forEach((slot, item) -> p.getInventory().setItem(slot, item));
     }
 
-    private void eliminatePlayer(Player p) {
-        p.setGameMode(GameMode.SPECTATOR);
-        p.teleport(new Location(gameServer, -50, 16, 406.5, 180f, 0.0f));
-        eliminated.add(p);
-        sendMessageAll(GameMessageUtils.getPlayerEliminatedMessage(p.getName()));
+    public void onBedStepped(HikaTeam team) {
+        if (state != GameState.PLAYING || team.isEliminated()) return;
+
+        team.loseLife();
+        sendMessageAll(GameMessageUtils.getLifeLostMessage(team));
+
+        if (team.isEliminated()) {
+            eliminateTeam(team);
+        }
+    }
+
+    private void eliminateTeam(HikaTeam team) {
+        sendMessageAll(GameMessageUtils.getTeamEliminatedMessage(team));
+        new ArrayList<>(team.getPlayers()).forEach(this::moveToSpectator);
         checkWinCondition();
     }
 
-    private boolean isTeamAlive(HikaTeam team) {
-        for (Player p : team.getPlayers()) {
-            if (!eliminated.contains(p)) return true;
-        }
-        return false;
+    private void moveToSpectator(Player p) {
+        p.setGameMode(GameMode.SPECTATOR);
+        p.teleport(new Location(gameServer, -50, 16, 406.5, 180f, 0.0f));
     }
 
     private void checkWinCondition() {
@@ -274,7 +292,7 @@ public class GameManager {
 
         List<HikaTeam> aliveTeams = new ArrayList<>();
         for (HikaTeam team : teamManager.getTeams()) {
-            if (isTeamAlive(team)) {
+            if (!team.isEliminated()) {
                 aliveTeams.add(team);
             }
         }
@@ -305,7 +323,6 @@ public class GameManager {
 
         List<Player> toRequeue = new ArrayList<>(players);
         players.clear();
-        eliminated.clear();
         teamManager.clearTeams();
         state = GameState.WAITING;
 

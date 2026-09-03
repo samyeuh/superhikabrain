@@ -2,10 +2,10 @@ package com.samy.superhikabrain.listeners;
 
 import com.samy.superhikabrain.manager.GameManager;
 import com.samy.superhikabrain.manager.TeamManager;
-import com.samy.superhikabrain.utils.GameMessageUtils;
 import com.samy.superhikabrain.utils.GameState;
 import com.samy.superhikabrain.utils.HikaTeam;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -57,6 +57,7 @@ public class GameListener implements Listener {
                     Block block = getTo.getBlock();
                     if (block.getLocation().equals((team.getBedSpawn()))){
                         teamManager.teleportPlayerToSpawn(p);
+                        manager.onBedStepped(team);
                     }
                 }
             }
@@ -66,18 +67,20 @@ public class GameListener implements Listener {
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
         if (manager.getState() != GameState.PLAYING) return;
-        Location loc = event.getBlock().getLocation();
+        Block block = event.getBlock();
+        Location loc = block.getLocation();
 
         for (HikaTeam team : manager.getTeamManager().getTeams()) {
-            if (!team.isBedDestroyed() && loc.equals(team.getBedSpawn())) {
-                team.setBedDestroyed(true);
-                manager.sendMessageAll(GameMessageUtils.getBedDestroyedMessage(team));
+            if (loc.equals(team.getBedSpawn())) {
+                event.setCancelled(true);
                 return;
             }
         }
 
         if (manager.isPlacedBlock(loc)) {
             manager.untrackPlacedBlock(loc);
+        } else if (block.getType() == Material.SANDSTONE) {
+            manager.trackMinedBlock(loc);
         } else {
             event.setCancelled(true);
         }
