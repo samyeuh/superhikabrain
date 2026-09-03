@@ -5,6 +5,7 @@ import com.samy.superhikabrain.utils.GameMessageUtils;
 import com.samy.superhikabrain.utils.GameState;
 import com.samy.superhikabrain.SuperHikabrain;
 import com.samy.superhikabrain.tasks.StartingTask;
+import com.samy.superhikabrain.utils.HikaTeam;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -161,11 +162,23 @@ public class GameManager {
     }
 
     public void playerFall(Player p){
-        if (state == GameState.PLAYING) {
-            teamManager.teleportPlayerToSpawn(p);
-            Map<Integer, ItemStack> items = hotbarManager.getPlayingHotbar(p);
-            items.forEach((slot, item) -> p.getInventory().setItem(slot, item));
+        if (state != GameState.PLAYING) return;
+
+        HikaTeam team = teamManager.getPlayerTeam(p);
+        if (team != null && team.isBedDestroyed()) {
+            eliminatePlayer(p);
+            return;
         }
+
+        teamManager.teleportPlayerToSpawn(p);
+        Map<Integer, ItemStack> items = hotbarManager.getPlayingHotbar(p);
+        items.forEach((slot, item) -> p.getInventory().setItem(slot, item));
+    }
+
+    private void eliminatePlayer(Player p) {
+        p.setGameMode(GameMode.SPECTATOR);
+        p.teleport(new Location(gameServer, -50, 16, 406.5, 180f, 0.0f));
+        sendMessageAll(GameMessageUtils.getPlayerEliminatedMessage(p.getName()));
     }
 
     public void sendMessageAll(String message) {
