@@ -1,2 +1,21 @@
 max_players: 4
 team_count: 4
+
+# spawn/bed: "x,y,z" ou "x,y,z,yaw,pitch"
+teams:
+  - name: Red
+    color: RED
+    spawn: "-50.5,12,369.5,0.0,0.0"
+    bed: "-51,7,368"
+  - name: Blue
+    color: BLUE
+    spawn: "-50.5,12,443.5,180.0,0.0"
+    bed: "-51,7,444"
+  - name: Green
+    color: GREEN
+    spawn: "-19.5,12,406.5,90.0,0.0"
+    bed: "-19,7,406"
+  - name: Yellow
+    color: YELLOW
+    spawn: "-81.5,12,406.5,270.0,0.0"
+    bed: "-83,7,406"
