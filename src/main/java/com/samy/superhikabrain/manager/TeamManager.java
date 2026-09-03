@@ -126,6 +126,12 @@ public class TeamManager {
         }
     }
 
+    public void resetBeds() {
+        for (HikaTeam team : teams) {
+            team.setBedDestroyed(false);
+        }
+    }
+
     public void teleportPlayers(){
         for (HikaTeam team : teams){
             team.teleportPlayers();

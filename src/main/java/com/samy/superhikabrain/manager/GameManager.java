@@ -138,6 +138,7 @@ public class GameManager {
 
     public void preplayGame() {
         state = GameState.PREPLAYING;
+        teamManager.resetBeds();
         teamManager.addPlayersToTeam();
         teamManager.teleportPlayers();
         PrePlayingTask task = new PrePlayingTask(this);
