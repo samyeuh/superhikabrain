@@ -1,10 +1,8 @@
 package com.samy.superhikabrain.manager;
 
 import com.samy.superhikabrain.utils.HikaTeam;
-import net.minecraft.server.v1_8_R3.NBTTagCompound;
 import org.bukkit.ChatColor;
 import org.bukkit.DyeColor;
-import org.bukkit.craftbukkit.v1_8_R3.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -26,14 +24,6 @@ public class HotbarManager {
     public HotbarManager(GameManager manager) {
         this.manager = manager;
         this.teamManager = manager.getTeamManager();
-    }
-
-    private static ItemStack makeUnbreakable(ItemStack item){
-        net.minecraft.server.v1_8_R3.ItemStack nms = CraftItemStack.asNMSCopy(item);
-        NBTTagCompound tag = nms.hasTag() ? nms.getTag() : new NBTTagCompound();
-        tag.setBoolean("Unbreakable", true);
-        nms.setTag(tag);
-        return CraftItemStack.asBukkitCopy(nms);
     }
 
     public Map<Integer, ItemStack> getWaitingHotbar(Player p) {
@@ -69,8 +59,8 @@ public class HotbarManager {
         sword_meta.addEnchant(Enchantment.KNOCKBACK, 1, true);
         sword_meta.addEnchant(Enchantment.DURABILITY, 3, true);
         sword_meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        sword_meta.spigot().setUnbreakable(true);
         sword.setItemMeta(sword_meta);
-        sword = makeUnbreakable(sword);
         hotbar.put(0, sword);
 
         ItemStack pickaxe = new ItemStack(Material.IRON_PICKAXE, 1);
@@ -79,8 +69,8 @@ public class HotbarManager {
         pickaxe_meta.addEnchant(Enchantment.DIG_SPEED, 3, true);
         pickaxe_meta.addEnchant(Enchantment.DURABILITY, 3, true);
         pickaxe_meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        pickaxe_meta.spigot().setUnbreakable(true);
         pickaxe.setItemMeta(pickaxe_meta);
-        pickaxe = makeUnbreakable(pickaxe);
         hotbar.put(1, pickaxe);
 
         ItemStack gold_apple = new ItemStack(Material.GOLDEN_APPLE, 64);
