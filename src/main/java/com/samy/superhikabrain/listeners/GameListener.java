@@ -2,6 +2,7 @@ package com.samy.superhikabrain.listeners;
 
 import com.samy.superhikabrain.manager.GameManager;
 import com.samy.superhikabrain.manager.TeamManager;
+import com.samy.superhikabrain.utils.GameMessageUtils;
 import com.samy.superhikabrain.utils.GameState;
 import com.samy.superhikabrain.utils.HikaTeam;
 import org.bukkit.Location;
@@ -10,6 +11,7 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -56,6 +58,19 @@ public class GameListener implements Listener {
                         teamManager.teleportPlayerToSpawn(p);
                     }
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onBedBreak(BlockBreakEvent event) {
+        if (manager.getState() != GameState.PLAYING) return;
+        Location loc = event.getBlock().getLocation();
+        for (HikaTeam team : manager.getTeamManager().getTeams()) {
+            if (!team.isBedDestroyed() && loc.equals(team.getBedSpawn())) {
+                team.setBedDestroyed(true);
+                manager.sendMessageAll(GameMessageUtils.getBedDestroyedMessage(team));
+                return;
             }
         }
     }

@@ -34,4 +34,11 @@ public class GameMessageUtils {
                 ChatColor.WHITE + "la partie ! " +
                 ChatColor.GREEN + nbPlayers;
     }
+
+    public static String getBedDestroyedMessage(HikaTeam team) {
+        return header +
+                ChatColor.WHITE + "Le lit de l'équipe " +
+                team.getColor() + team.getName() +
+                ChatColor.WHITE + " a été détruit !";
+    }
 }

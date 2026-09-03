@@ -12,6 +12,7 @@ public class HikaTeam extends TeamGame {
     private final Location spawn;
     private final int maxSize;
     private final Location bedSpawn;
+    private boolean bedDestroyed = false;
 
     public HikaTeam(String name, ChatColor color, List<Player> players, Location spawn, int maxSize, Location bedSpawn) {
         super(name, color, players);
@@ -30,6 +31,14 @@ public class HikaTeam extends TeamGame {
 
     public Location getBedSpawn() {
         return bedSpawn;
+    }
+
+    public boolean isBedDestroyed() {
+        return bedDestroyed;
+    }
+
+    public void setBedDestroyed(boolean bedDestroyed) {
+        this.bedDestroyed = bedDestroyed;
     }
 
     public boolean isFull() {
