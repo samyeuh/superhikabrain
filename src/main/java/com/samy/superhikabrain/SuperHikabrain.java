@@ -34,7 +34,7 @@ public class SuperHikabrain extends JavaPlugin {
     }
 
     public void enableScoreboard(){
-        getServer().getPluginManager().registerEvents(new ScoreboardListener(api.getScoreboardManager()), this);
+        getServer().getPluginManager().registerEvents(new ScoreboardListener(api.getScoreboardManager(), manager), this);
     }
 
     public GameManager getGameManager(){
