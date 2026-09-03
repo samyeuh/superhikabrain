@@ -156,11 +156,18 @@ public class GameManager {
         placedBlocks.remove(location);
     }
 
-    public void preplayGame() {
-        state = GameState.PREPLAYING;
+    private void resetArena() {
+        for (Location location : placedBlocks) {
+            location.getBlock().setType(Material.AIR);
+        }
         placedBlocks.clear();
         eliminated.clear();
         teamManager.resetBeds();
+    }
+
+    public void preplayGame() {
+        state = GameState.PREPLAYING;
+        resetArena();
         teamManager.addPlayersToTeam();
         teamManager.teleportPlayers();
         PrePlayingTask task = new PrePlayingTask(this);

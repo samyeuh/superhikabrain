@@ -3,6 +3,7 @@ package com.samy.superhikabrain.utils;
 import com.samy.api.TeamGame;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -12,6 +13,7 @@ public class HikaTeam extends TeamGame {
     private final Location spawn;
     private final int maxSize;
     private final Location bedSpawn;
+    private final BlockState originalBedState;
     private boolean bedDestroyed = false;
 
     public HikaTeam(String name, ChatColor color, List<Player> players, Location spawn, int maxSize, Location bedSpawn) {
@@ -19,6 +21,7 @@ public class HikaTeam extends TeamGame {
         this.spawn = spawn;
         this.maxSize = maxSize;
         this.bedSpawn = bedSpawn;
+        this.originalBedState = bedSpawn.getBlock().getState();
     }
 
     public Location getSpawn() {
@@ -39,6 +42,11 @@ public class HikaTeam extends TeamGame {
 
     public void setBedDestroyed(boolean bedDestroyed) {
         this.bedDestroyed = bedDestroyed;
+    }
+
+    public void restoreBed() {
+        originalBedState.update(true, false);
+        this.bedDestroyed = false;
     }
 
     public boolean isFull() {

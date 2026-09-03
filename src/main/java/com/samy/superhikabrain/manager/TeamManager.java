@@ -128,7 +128,7 @@ public class TeamManager {
 
     public void resetBeds() {
         for (HikaTeam team : teams) {
-            team.setBedDestroyed(false);
+            team.restoreBed();
         }
     }
 
