@@ -41,4 +41,12 @@ public class GameMessageUtils {
                 team.getColor() + team.getName() +
                 ChatColor.WHITE + " a été détruit !";
     }
+
+    public static String getPlayerEliminatedMessage(String player) {
+        return header +
+                ChatColor.AQUA + player +
+                ChatColor.WHITE + " a été " +
+                ChatColor.RED + "éliminé" +
+                ChatColor.WHITE + " !";
+    }
 }
