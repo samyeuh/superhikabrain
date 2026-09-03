@@ -132,6 +132,12 @@ public class TeamManager {
         }
     }
 
+    public void clearTeams() {
+        for (HikaTeam team : teams) {
+            team.getPlayers().clear();
+        }
+    }
+
     public void teleportPlayers(){
         for (HikaTeam team : teams){
             team.teleportPlayers();

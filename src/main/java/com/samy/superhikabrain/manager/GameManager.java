@@ -29,6 +29,7 @@ public class GameManager {
     private final HotbarManager hotbarManager;
     private final TeamManager teamManager;
     private final Set<Location> placedBlocks = new HashSet<>();
+    private final Set<Player> eliminated = new HashSet<>();
 
     public GameManager(SuperHikabrain plugin) {
         this.state = GameState.WAITING;
@@ -116,6 +117,9 @@ public class GameManager {
         if (state == GameState.STARTING) {
             state = GameState.WAITING;
         }
+        if (state == GameState.PLAYING) {
+            checkWinCondition();
+        }
     }
 
     private void addPlayer(Player player) {
@@ -155,6 +159,7 @@ public class GameManager {
     public void preplayGame() {
         state = GameState.PREPLAYING;
         placedBlocks.clear();
+        eliminated.clear();
         teamManager.resetBeds();
         teamManager.addPlayersToTeam();
         teamManager.teleportPlayers();
@@ -194,7 +199,58 @@ public class GameManager {
     private void eliminatePlayer(Player p) {
         p.setGameMode(GameMode.SPECTATOR);
         p.teleport(new Location(gameServer, -50, 16, 406.5, 180f, 0.0f));
+        eliminated.add(p);
         sendMessageAll(GameMessageUtils.getPlayerEliminatedMessage(p.getName()));
+        checkWinCondition();
+    }
+
+    private boolean isTeamAlive(HikaTeam team) {
+        for (Player p : team.getPlayers()) {
+            if (!eliminated.contains(p)) return true;
+        }
+        return false;
+    }
+
+    private void checkWinCondition() {
+        if (state != GameState.PLAYING) return;
+
+        List<HikaTeam> aliveTeams = new ArrayList<>();
+        for (HikaTeam team : teamManager.getTeams()) {
+            if (isTeamAlive(team)) {
+                aliveTeams.add(team);
+            }
+        }
+
+        if (aliveTeams.size() <= 1) {
+            endGame(aliveTeams.isEmpty() ? null : aliveTeams.get(0));
+        }
+    }
+
+    private void endGame(HikaTeam winningTeam) {
+        state = GameState.FINISHED;
+
+        if (winningTeam != null) {
+            sendMessageAll(GameMessageUtils.getVictoryMessage(winningTeam));
+            sendTitleAll(winningTeam.getColor() + winningTeam.getName());
+        } else {
+            sendMessageAll(GameMessageUtils.getNoWinnerMessage());
+        }
+
+        Bukkit.getScheduler().runTaskLater(plugin, this::resetToLobby, 100L);
+    }
+
+    private void resetToLobby() {
+        List<Player> toRequeue = new ArrayList<>(players);
+        players.clear();
+        eliminated.clear();
+        teamManager.clearTeams();
+        state = GameState.WAITING;
+
+        for (Player player : toRequeue) {
+            if (player.isOnline()) {
+                joinPlayer(player);
+            }
+        }
     }
 
     public void sendMessageAll(String message) {

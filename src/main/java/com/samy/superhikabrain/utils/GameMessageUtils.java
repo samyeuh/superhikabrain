@@ -49,4 +49,15 @@ public class GameMessageUtils {
                 ChatColor.RED + "éliminé" +
                 ChatColor.WHITE + " !";
     }
+
+    public static String getVictoryMessage(HikaTeam team) {
+        return header +
+                ChatColor.WHITE + "L'équipe " +
+                team.getColor() + team.getName() +
+                ChatColor.WHITE + " a gagné la partie !";
+    }
+
+    public static String getNoWinnerMessage() {
+        return header + ChatColor.WHITE + "Partie terminée, aucune équipe gagnante.";
+    }
 }
