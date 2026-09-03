@@ -12,11 +12,15 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import org.bukkit.scheduler.BukkitTask;
+
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 public class GameManager {
 
@@ -30,6 +34,8 @@ public class GameManager {
     private final TeamManager teamManager;
     private final Set<Location> placedBlocks = new HashSet<>();
     private final Set<Player> eliminated = new HashSet<>();
+    private final Map<UUID, BukkitTask> pendingRemovals = new HashMap<>();
+    private static final long RECONNECT_GRACE_TICKS = 20L * 60 * 5; // 5 min
 
     public GameManager(SuperHikabrain plugin) {
         this.state = GameState.WAITING;
@@ -96,6 +102,11 @@ public class GameManager {
     public GameState getState() { return state; }
 
     public void joinPlayer(Player player) {
+        if (pendingRemovals.containsKey(player.getUniqueId())) {
+            reconnectPlayer(player);
+            return;
+        }
+
         if (state == GameState.WAITING) {
             player.teleport(waitingServer.getSpawnLocation());
             player.setGameMode(GameMode.ADVENTURE);
@@ -113,12 +124,52 @@ public class GameManager {
 
     public void quitPlayer(Player player){
         if (!players.contains(player)) return;
+
+        if (state == GameState.PREPLAYING || state == GameState.PLAYING) {
+            disconnectPlayer(player);
+            return;
+        }
+
         this.removePlayer(player);
         if (state == GameState.STARTING) {
             state = GameState.WAITING;
         }
+    }
+
+    private void disconnectPlayer(Player player) {
+        BukkitTask existing = pendingRemovals.remove(player.getUniqueId());
+        if (existing != null) existing.cancel();
+
+        sendMessageAll(GameMessageUtils.playerDisconnectedMessage(player.getName()));
+        BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> finalizeDisconnect(player), RECONNECT_GRACE_TICKS);
+        pendingRemovals.put(player.getUniqueId(), task);
+    }
+
+    private void finalizeDisconnect(Player player) {
+        pendingRemovals.remove(player.getUniqueId());
+        if (!players.contains(player)) return;
+
+        this.removePlayer(player);
         if (state == GameState.PLAYING) {
             checkWinCondition();
+        }
+    }
+
+    private void reconnectPlayer(Player player) {
+        BukkitTask task = pendingRemovals.remove(player.getUniqueId());
+        if (task != null) task.cancel();
+
+        sendMessageAll(GameMessageUtils.playerReconnectedMessage(player.getName()));
+
+        HikaTeam team = teamManager.getPlayerTeam(player);
+        if (state == GameState.PLAYING && team != null && !team.isBedDestroyed()) {
+            teamManager.teleportPlayerToSpawn(player);
+            Map<Integer, ItemStack> items = hotbarManager.getPlayingHotbar(player);
+            items.forEach((slot, item) -> player.getInventory().setItem(slot, item));
+            player.setGameMode(GameMode.SURVIVAL);
+        } else {
+            player.setGameMode(GameMode.SPECTATOR);
+            player.teleport(new Location(gameServer, -50, 16, 406.5, 180f, 0.0f));
         }
     }
 
@@ -247,6 +298,11 @@ public class GameManager {
     }
 
     private void resetToLobby() {
+        for (BukkitTask task : pendingRemovals.values()) {
+            task.cancel();
+        }
+        pendingRemovals.clear();
+
         List<Player> toRequeue = new ArrayList<>(players);
         players.clear();
         eliminated.clear();

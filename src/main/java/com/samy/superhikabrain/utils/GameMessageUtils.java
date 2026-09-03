@@ -60,4 +60,20 @@ public class GameMessageUtils {
     public static String getNoWinnerMessage() {
         return header + ChatColor.WHITE + "Partie terminée, aucune équipe gagnante.";
     }
+
+    public static String playerDisconnectedMessage(String player) {
+        return header +
+                ChatColor.AQUA + player +
+                ChatColor.WHITE + " s'est déconnecté, il a " +
+                ChatColor.GREEN + "5 minutes" +
+                ChatColor.WHITE + " pour revenir dans la partie.";
+    }
+
+    public static String playerReconnectedMessage(String player) {
+        return header +
+                ChatColor.AQUA + player +
+                ChatColor.WHITE + " est " +
+                ChatColor.GREEN + "revenu" +
+                ChatColor.WHITE + " dans la partie !";
+    }
 }
