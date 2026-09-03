@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -63,9 +64,10 @@ public class GameListener implements Listener {
     }
 
     @EventHandler
-    public void onBedBreak(BlockBreakEvent event) {
+    public void onBlockBreak(BlockBreakEvent event) {
         if (manager.getState() != GameState.PLAYING) return;
         Location loc = event.getBlock().getLocation();
+
         for (HikaTeam team : manager.getTeamManager().getTeams()) {
             if (!team.isBedDestroyed() && loc.equals(team.getBedSpawn())) {
                 team.setBedDestroyed(true);
@@ -73,5 +75,17 @@ public class GameListener implements Listener {
                 return;
             }
         }
+
+        if (manager.isPlacedBlock(loc)) {
+            manager.untrackPlacedBlock(loc);
+        } else {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        if (manager.getState() != GameState.PLAYING) return;
+        manager.trackPlacedBlock(event.getBlock().getLocation());
     }
 }

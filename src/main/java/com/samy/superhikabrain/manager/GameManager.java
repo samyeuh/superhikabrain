@@ -13,8 +13,10 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class GameManager {
 
@@ -26,6 +28,7 @@ public class GameManager {
     private final World gameServer;
     private final HotbarManager hotbarManager;
     private final TeamManager teamManager;
+    private final Set<Location> placedBlocks = new HashSet<>();
 
     public GameManager(SuperHikabrain plugin) {
         this.state = GameState.WAITING;
@@ -137,8 +140,21 @@ public class GameManager {
         task.runTaskTimer(plugin, 0, 20);
     }
 
+    public void trackPlacedBlock(Location location) {
+        placedBlocks.add(location);
+    }
+
+    public boolean isPlacedBlock(Location location) {
+        return placedBlocks.contains(location);
+    }
+
+    public void untrackPlacedBlock(Location location) {
+        placedBlocks.remove(location);
+    }
+
     public void preplayGame() {
         state = GameState.PREPLAYING;
+        placedBlocks.clear();
         teamManager.resetBeds();
         teamManager.addPlayersToTeam();
         teamManager.teleportPlayers();
