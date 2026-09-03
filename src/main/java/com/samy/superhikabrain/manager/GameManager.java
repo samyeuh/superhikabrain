@@ -103,8 +103,10 @@ public class GameManager {
     }
 
     public void quitPlayer(Player player){
-        if (state == GameState.WAITING) {
-            this.removePlayer(player);
+        if (!players.contains(player)) return;
+        this.removePlayer(player);
+        if (state == GameState.STARTING) {
+            state = GameState.WAITING;
         }
     }
 
@@ -119,6 +121,7 @@ public class GameManager {
 
     public void removePlayer(Player player) {
         players.remove(player);
+        teamManager.removePlayerFromTeam(player);
         String nbPlayers = players.size() + "/" + maxPlayers;
         this.sendMessageAll(GameMessageUtils.playerLeaveMessage(player.getName(), nbPlayers));
     }
