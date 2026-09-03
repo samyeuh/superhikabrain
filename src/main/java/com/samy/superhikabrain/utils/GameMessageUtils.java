@@ -35,18 +35,21 @@ public class GameMessageUtils {
                 ChatColor.GREEN + nbPlayers;
     }
 
-    public static String getBedDestroyedMessage(HikaTeam team) {
+    public static String getLifeLostMessage(HikaTeam team) {
         return header +
-                ChatColor.WHITE + "Le lit de l'équipe " +
+                ChatColor.WHITE + "L'équipe " +
                 team.getColor() + team.getName() +
-                ChatColor.WHITE + " a été détruit !";
+                ChatColor.WHITE + " a perdu un point ! (" +
+                ChatColor.RED + team.getLives() +
+                ChatColor.WHITE + " restant" + (team.getLives() > 1 ? "s" : "") + ")";
     }
 
-    public static String getPlayerEliminatedMessage(String player) {
+    public static String getTeamEliminatedMessage(HikaTeam team) {
         return header +
-                ChatColor.AQUA + player +
-                ChatColor.WHITE + " a été " +
-                ChatColor.RED + "éliminé" +
+                ChatColor.WHITE + "L'équipe " +
+                team.getColor() + team.getName() +
+                ChatColor.WHITE + " n'a plus de points, elle est " +
+                ChatColor.RED + "éliminée" +
                 ChatColor.WHITE + " !";
     }
 

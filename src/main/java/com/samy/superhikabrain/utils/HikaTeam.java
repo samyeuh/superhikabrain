@@ -3,7 +3,6 @@ package com.samy.superhikabrain.utils;
 import com.samy.api.TeamGame;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.block.BlockState;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -13,15 +12,16 @@ public class HikaTeam extends TeamGame {
     private final Location spawn;
     private final int maxSize;
     private final Location bedSpawn;
-    private final BlockState originalBedState;
-    private boolean bedDestroyed = false;
+    private final int startingLives;
+    private int lives;
 
-    public HikaTeam(String name, ChatColor color, List<Player> players, Location spawn, int maxSize, Location bedSpawn) {
+    public HikaTeam(String name, ChatColor color, List<Player> players, Location spawn, int maxSize, Location bedSpawn, int startingLives) {
         super(name, color, players);
         this.spawn = spawn;
         this.maxSize = maxSize;
         this.bedSpawn = bedSpawn;
-        this.originalBedState = bedSpawn.getBlock().getState();
+        this.startingLives = startingLives;
+        this.lives = startingLives;
     }
 
     public Location getSpawn() {
@@ -36,17 +36,20 @@ public class HikaTeam extends TeamGame {
         return bedSpawn;
     }
 
-    public boolean isBedDestroyed() {
-        return bedDestroyed;
+    public int getLives() {
+        return lives;
     }
 
-    public void setBedDestroyed(boolean bedDestroyed) {
-        this.bedDestroyed = bedDestroyed;
+    public boolean isEliminated() {
+        return lives <= 0;
     }
 
-    public void restoreBed() {
-        originalBedState.update(true, false);
-        this.bedDestroyed = false;
+    public void loseLife() {
+        if (lives > 0) lives--;
+    }
+
+    public void resetLives() {
+        this.lives = startingLives;
     }
 
     public boolean isFull() {

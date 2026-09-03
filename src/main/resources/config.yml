@@ -1,5 +1,6 @@
 max_players: 4
 team_count: 4
+team_lives: 3
 
 # spawn/bed: "x,y,z" ou "x,y,z,yaw,pitch"
 teams:
