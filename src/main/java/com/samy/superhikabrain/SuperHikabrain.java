@@ -4,6 +4,7 @@ import com.samy.api.SuperAPI;
 import com.samy.superhikabrain.listeners.HotbarListener;
 import com.samy.superhikabrain.listeners.ScoreboardListener;
 import com.samy.superhikabrain.manager.GameManager;
+import org.bukkit.Bukkit;
 import org.bukkit.WorldCreator;
 import org.bukkit.plugin.java.JavaPlugin;
 import com.samy.superhikabrain.listeners.GameListener;
@@ -41,7 +42,9 @@ public class SuperHikabrain extends JavaPlugin {
     }
 
     public void enableScoreboard(){
-        getServer().getPluginManager().registerEvents(new ScoreboardListener(api.getScoreboardManager(), manager), this);
+        ScoreboardListener scoreboardListener = new ScoreboardListener(api.getScoreboardManager(), manager);
+        getServer().getPluginManager().registerEvents(scoreboardListener, this);
+        Bukkit.getScheduler().runTaskTimer(this, scoreboardListener::refreshAll, 0L, 20L);
     }
 
     public GameManager getGameManager(){
