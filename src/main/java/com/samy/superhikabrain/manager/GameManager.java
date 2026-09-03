@@ -68,6 +68,10 @@ public class GameManager {
         return players.size() == maxPlayers;
     }
 
+    public int getMaxPlayers() {
+        return maxPlayers;
+    }
+
     public SuperHikabrain getPlugin() {
         return plugin;
     }
