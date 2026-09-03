@@ -3,10 +3,12 @@ package com.samy.superhikabrain.manager;
 import com.samy.superhikabrain.utils.HikaTeam;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class TeamManager {
 
@@ -30,54 +32,34 @@ public class TeamManager {
     }
 
     public void createTeams(int maxPlayers, int teamCount){
-        List<HikaTeam> possibleTeams = new ArrayList<>();
-        possibleTeams.add(
-            new HikaTeam(
-          "Red",
-                ChatColor.RED,
-                new ArrayList<>(),
-                new Location(manager.getPlugin().getServer().getWorld("game"), -50.5, 12, 369.5, 0.0f, 0.0f),
-        maxPlayers / teamCount,
-                new Location(manager.getPlugin().getServer().getWorld("game"), -51, 7, 368)
-            )
-        );
-
-        possibleTeams.add(
-            new HikaTeam(
-          "Blue",
-                ChatColor.BLUE,
-                new ArrayList<>(),
-                new Location(manager.getPlugin().getServer().getWorld("game"), -50.5, 12, 443.5,180f,0.0f),
-        maxPlayers / teamCount,
-                new Location(manager.getPlugin().getServer().getWorld("game"), -51, 7, 444)
-            )
-        );
-
-        possibleTeams.add(
-            new HikaTeam(
-          "Green",
-                ChatColor.GREEN,
-                new ArrayList<>(),
-                new Location(manager.getPlugin().getServer().getWorld("game"), -19.5, 12, 406.5, 90f, 0.0f),
-        maxPlayers / teamCount,
-                new Location(manager.getPlugin().getServer().getWorld("game"), -19, 7, 406)
-            )
-        );
-
-        possibleTeams.add(
-            new HikaTeam(
-          "Yellow",
-                ChatColor.YELLOW,
-                new ArrayList<>(),
-                new Location(manager.getPlugin().getServer().getWorld("game"), -81.5, 12, 406.5, 270f, 0.0f),
-        maxPlayers / teamCount,
-                new Location(manager.getPlugin().getServer().getWorld("game"), -83, 7, 406)
-            )
-        );
-
-        for (int i = 0; i < teamCount; i++){
-            teams.add(possibleTeams.get(i));
+        List<Map<?, ?>> configuredTeams = manager.getPlugin().getConfig().getMapList("teams");
+        if (configuredTeams.size() < teamCount) {
+            throw new IllegalStateException("config.yml définit " + configuredTeams.size()
+                    + " équipe(s) dans 'teams' mais team_count=" + teamCount
+                    + " : ajoute des entrées 'teams' dans config.yml.");
         }
+
+        World world = manager.getPlugin().getServer().getWorld("game");
+        int teamSize = maxPlayers / teamCount;
+
+        for (int i = 0; i < teamCount; i++) {
+            Map<?, ?> teamConfig = configuredTeams.get(i);
+            String name = (String) teamConfig.get("name");
+            ChatColor color = ChatColor.valueOf((String) teamConfig.get("color"));
+            Location spawn = parseLocation(world, (String) teamConfig.get("spawn"));
+            Location bedSpawn = parseLocation(world, (String) teamConfig.get("bed"));
+            teams.add(new HikaTeam(name, color, new ArrayList<>(), spawn, teamSize, bedSpawn));
+        }
+    }
+
+    private Location parseLocation(World world, String raw) {
+        String[] parts = raw.split(",");
+        double x = Double.parseDouble(parts[0].trim());
+        double y = Double.parseDouble(parts[1].trim());
+        double z = Double.parseDouble(parts[2].trim());
+        float yaw = parts.length > 3 ? Float.parseFloat(parts[3].trim()) : 0f;
+        float pitch = parts.length > 4 ? Float.parseFloat(parts[4].trim()) : 0f;
+        return new Location(world, x, y, z, yaw, pitch);
     }
 
     public List<HikaTeam> getTeams() {
