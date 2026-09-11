@@ -46,7 +46,8 @@ public class ScoreboardListener implements Listener {
         objective.getScore("§6samy.fr").setScore(-2);
         objective.getScore(" ").setScore(-1);
 
-        if (gameManager.getState() == GameState.WAITING) {
+        GameState state = gameManager.getState();
+        if (state == GameState.WAITING || state == GameState.STARTING) {
             objective.getScore("§lJoueurs: §a" + gameManager.getPlayers().size() + "/" + gameManager.getMaxPlayers()).setScore(0);
         } else {
             List<HikaTeam> teams = gameManager.getTeamManager().getTeams();
