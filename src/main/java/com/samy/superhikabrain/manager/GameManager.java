@@ -8,6 +8,7 @@ import com.samy.superhikabrain.tasks.StartingTask;
 import com.samy.superhikabrain.utils.HikaTeam;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
@@ -15,6 +16,8 @@ import org.bukkit.potion.PotionEffectType;
 
 import org.bukkit.scheduler.BukkitTask;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class GameManager {
 
@@ -37,6 +41,7 @@ public class GameManager {
     private final Set<Location> minedBlocks = new HashSet<>();
     private final Map<UUID, BukkitTask> pendingRemovals = new HashMap<>();
     private static final long RECONNECT_GRACE_TICKS = 20L * 60 * 5; // 5 min
+    private final File arenaStateFile;
 
     public GameManager(SuperHikabrain plugin) {
         this.state = GameState.WAITING;
@@ -46,9 +51,16 @@ public class GameManager {
         this.maxPlayers = plugin.getConfig().getInt("max_players");
         this.gameServer = plugin.getServer().getWorld("game");
         this.waitingServer = plugin.getServer().getWorld("waiting");
+        this.arenaStateFile = new File(plugin.getDataFolder(), "arena-state.yml");
         waitingServer.setSpawnLocation(54, 64, 0);
 
         setGameRules();
+
+        // Le tracking des blocs posés/minés ne vit qu'en mémoire : un restart/reload
+        // avant la fin d'une partie le perdait sans remettre l'arène à zéro. On
+        // recharge ce qui a pu être sauvegardé et on nettoie tout de suite.
+        loadArenaState();
+        resetArena();
     }
 
     public void setGameRules() {
@@ -197,6 +209,7 @@ public class GameManager {
 
     public void trackPlacedBlock(Location location) {
         placedBlocks.add(location);
+        saveArenaState();
     }
 
     public boolean isPlacedBlock(Location location) {
@@ -205,10 +218,12 @@ public class GameManager {
 
     public void untrackPlacedBlock(Location location) {
         placedBlocks.remove(location);
+        saveArenaState();
     }
 
     public void trackMinedBlock(Location location) {
         minedBlocks.add(location);
+        saveArenaState();
     }
 
     private void resetArena() {
@@ -224,7 +239,46 @@ public class GameManager {
         }
         minedBlocks.clear();
 
+        saveArenaState();
         teamManager.resetLives();
+    }
+
+    private void saveArenaState() {
+        YamlConfiguration config = new YamlConfiguration();
+        config.set("placed", serializeLocations(placedBlocks));
+        config.set("mined", serializeLocations(minedBlocks));
+        try {
+            config.save(arenaStateFile);
+        } catch (IOException e) {
+            plugin.getLogger().log(Level.WARNING, "Impossible de sauvegarder l'état de l'arène", e);
+        }
+    }
+
+    private void loadArenaState() {
+        if (!arenaStateFile.exists()) return;
+
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(arenaStateFile);
+        placedBlocks.addAll(deserializeLocations(config.getStringList("placed")));
+        minedBlocks.addAll(deserializeLocations(config.getStringList("mined")));
+    }
+
+    private List<String> serializeLocations(Set<Location> locations) {
+        List<String> serialized = new ArrayList<>();
+        for (Location location : locations) {
+            serialized.add(location.getWorld().getName() + ";" + location.getBlockX() + ";" + location.getBlockY() + ";" + location.getBlockZ());
+        }
+        return serialized;
+    }
+
+    private List<Location> deserializeLocations(List<String> serialized) {
+        List<Location> locations = new ArrayList<>();
+        for (String entry : serialized) {
+            String[] parts = entry.split(";");
+            World world = plugin.getServer().getWorld(parts[0]);
+            if (world == null) continue;
+            locations.add(new Location(world, Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), Integer.parseInt(parts[3])));
+        }
+        return locations;
     }
 
     public void preplayGame() {
